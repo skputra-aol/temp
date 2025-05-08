@@ -1,0 +1,30 @@
+
+pool:
+  vmImage: 'windows-2022'
+
+steps:
+- task: Bash@3
+  displayName: Install MAUI
+  inputs:
+    targetType: 'inline'
+    script: |
+      dotnet workload install maui-android
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: 'MauiAndroidLinuxPipeline.sln'
+    arguments: '-c Release -f net8.0-android'
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(agent.builddirectory)'
+    Contents: '**/*-Signed.aab'
+    TargetFolder: '$(build.artifactstagingdirectory)'
+    flattenFolders: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
